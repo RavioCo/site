@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /checkout
+Disallow: /design-system
+Disallow: /foundation-architecture
+
+Sitemap: https://ravioco.com/sitemap.xml
