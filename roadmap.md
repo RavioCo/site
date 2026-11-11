@@ -1,0 +1,4 @@
+- [x] Remove internal wording from public pages and dialogs without changing design or commerce behavior.
+- [x] Verify public pages and shopping/search interactions.
+- [x] Correct text contrast without changing decorative accents or layouts.
+- [x] Run contrast tests, preview checks, and inspect production build diagnostics; report AAA limitations and automated coverage gaps separately.
