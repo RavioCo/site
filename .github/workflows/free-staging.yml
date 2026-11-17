@@ -25,6 +25,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Verify expected Next.js source layout
+        run: |
+          test -f src/app/page.tsx || { echo "::error::Expected Next.js App Router source at src/app/page.tsx; the current branch contains a different Vite/TanStack source tree."; exit 1; }
+          test -f src/lib/woo/server.ts || { echo "::error::Expected WooCommerce server integration at src/lib/woo/server.ts."; exit 1; }
+          test ! -f vite.config.ts || { echo "::error::Vite config is still present; reconcile the old app before building the Next.js storefront."; exit 1; }
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
