@@ -44,7 +44,8 @@ jobs:
           test -f "$TMP_DIR/web/package.json"
           test -f "$TMP_DIR/plugin/ravio-commerce-bridge/ravio-commerce-bridge.php"
 
-          # Replace the incompatible legacy Vite/TanStack app with the supplied Next.js app.
+          # Replace the entire legacy app tree; overlaying would retain stale Vite/TanStack files under src/.
+          rm -rf src
           cp -a "$TMP_DIR/web/." .
           rm -rf components hooks integrations lib drizzle supabase
           rm -f vite.config.ts vitest.config.ts router.tsx routeTree.gen.ts server.ts start.ts
