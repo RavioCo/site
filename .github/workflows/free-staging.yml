@@ -73,6 +73,9 @@ jobs:
       - name: Production build
         run: npm run build
 
+      - name: Set up Bun for OpenNext build
+        uses: oven-sh/setup-bun@v2
+
       - name: Cloudflare Workers adapter build
         run: npm run build:cf
 
