@@ -39,6 +39,8 @@ jobs:
           TMP_DIR="$(mktemp -d)"
           unzip -q ravio-web-final.zip -d "$TMP_DIR/web"
           unzip -q ravio-commerce-bridge-final-v2.zip -d "$TMP_DIR/plugin"
+          # Do not import third-party workflow files; this workflow uses the repository token without workflow scope.
+          rm -rf "$TMP_DIR/web/.github/workflows"
           test -f "$TMP_DIR/web/src/app/page.tsx"
           test -f "$TMP_DIR/web/src/lib/woo/server.ts"
           test -f "$TMP_DIR/web/package.json"
