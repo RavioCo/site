@@ -1,0 +1,59 @@
+name: Plugin checks
+
+# Runs on every push and every pull request. NOTE: GitHub only reads workflows from `.github/workflows/` at the
+# ROOT of a repository, so this plugin folder must be the repository root (or copy this file to the monorepo root
+# and add `defaults: run: working-directory: <plugin folder>`).
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: plugin-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  php:
+    name: PHP ${{ matrix.php }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.1', '8.3', '8.4']
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          tools: none
+          coverage: none
+
+      - name: PHP version
+        run: php -v
+
+      - name: Lint (validator and its tests first, then every PHP file)
+        run: |
+          set -euo pipefail
+          php -l includes/class-sslc-validator.php
+          php -l tests/validator-test.php
+          find . -name '*.php' -print0 | xargs -0 -n1 php -l
+
+      - name: Run validator tests (a non-zero exit fails the job)
+        run: |
+          set -euo pipefail
+          php -d display_errors=1 -d error_reporting=-1 tests/validator-test.php | tee validator-test.out
+
+      - name: Verify test OUTPUT (declared count, no FAIL, no PHP warnings, minimum 30 cases)
+        run: bash tests/check-validator-output.sh validator-test.out tests/validator-test.php
+
+      - name: Keep test output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: validator-test-output-php-${{ matrix.php }}
+          path: validator-test.out
+          if-no-files-found: ignore

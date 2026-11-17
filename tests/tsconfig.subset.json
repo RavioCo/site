@@ -1,0 +1,5 @@
+{
+  "//": "Strict type-check of the dependency-free commerce modules. Usable without installing React/Next. Run: npx tsc -p tests/tsconfig.subset.json",
+  "compilerOptions": { "target": "ES2022", "lib": ["dom", "dom.iterable", "esnext"], "strict": true, "noEmit": true, "module": "esnext", "moduleResolution": "bundler", "skipLibCheck": true, "types": ["node"], "paths": { "@/*": ["../src/*"] } },
+  "files": ["../src/lib/products.ts", "../src/lib/woo/types.ts", "../src/lib/woo/server.ts", "../src/lib/woo/catalog.ts", "../src/lib/storeClient.ts", "../src/lib/commerce.ts"]
+}

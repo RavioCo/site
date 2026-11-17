@@ -1,0 +1,11 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "main": ".open-next/worker.js",
+  "name": "ravio-web",
+  "compatibility_date": "2025-06-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
+  "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "ravio-web" }]
+  // Secrets (WC_STORE_URL, RAVIO_PROXY_SECRET) are set with `wrangler secret put`, not here.
+  // Custom domain ravioco.com is attached in the Cloudflare dashboard (Workers > ravio-web > Domains).
+}

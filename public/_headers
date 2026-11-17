@@ -1,0 +1,5 @@
+# Applies to static assets only (Workers Assets). Security headers for dynamic responses are in next.config.ts.
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable
+/images/*
+  Cache-Control: public, max-age=31536000, immutable
