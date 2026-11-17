@@ -10,7 +10,7 @@ on:
       - "staging/**"
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: ravio-checks-${{ github.ref }}
@@ -18,21 +18,43 @@ concurrency:
 
 jobs:
   frontend:
-    name: Frontend install, typecheck and production build
+    name: Extract supplied source, test and build
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 35
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.ref_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Verify expected Next.js source layout
+      - name: Verify and extract supplied archives
+        shell: bash
         run: |
-          test -f src/app/page.tsx || { echo "::error::Expected Next.js App Router source at src/app/page.tsx; the current branch contains a different Vite/TanStack source tree."; exit 1; }
-          test -f src/lib/woo/server.ts || { echo "::error::Expected WooCommerce server integration at src/lib/woo/server.ts."; exit 1; }
-          test ! -f vite.config.ts || { echo "::error::Vite config is still present; reconcile the old app before building the Next.js storefront."; exit 1; }
+          set -euo pipefail
+          test -s ravio-web-final.zip
+          test -s ravio-commerce-bridge-final-v2.zip
+          unzip -t ravio-web-final.zip
+          unzip -t ravio-commerce-bridge-final-v2.zip
+          TMP_DIR="$(mktemp -d)"
+          unzip -q ravio-web-final.zip -d "$TMP_DIR/web"
+          unzip -q ravio-commerce-bridge-final-v2.zip -d "$TMP_DIR/plugin"
+          test -f "$TMP_DIR/web/src/app/page.tsx"
+          test -f "$TMP_DIR/web/src/lib/woo/server.ts"
+          test -f "$TMP_DIR/web/package.json"
+          test -f "$TMP_DIR/plugin/ravio-commerce-bridge/ravio-commerce-bridge.php"
+
+          # Replace the incompatible legacy Vite/TanStack app with the supplied Next.js app.
+          cp -a "$TMP_DIR/web/." .
+          rm -rf components hooks integrations lib drizzle supabase
+          rm -f vite.config.ts vitest.config.ts router.tsx routeTree.gen.ts server.ts start.ts
+          rm -rf wordpress-plugin/ravio-commerce-bridge
+          mkdir -p wordpress-plugin
+          cp -a "$TMP_DIR/plugin/ravio-commerce-bridge" wordpress-plugin/
+          rm -rf "$TMP_DIR"
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 22
 
@@ -42,5 +64,36 @@ jobs:
       - name: TypeScript check
         run: npm run typecheck
 
+      - name: Run storefront tests
+        run: npm test
+
       - name: Production build
         run: npm run build
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+
+      - name: PHP syntax checks
+        shell: bash
+        run: |
+          find wordpress-plugin/ravio-commerce-bridge -name '*.php' -print0 | xargs -0 -n1 php -l
+
+      - name: WooCommerce bridge validator tests
+        run: php wordpress-plugin/ravio-commerce-bridge/tests/validator-test.php
+
+      - name: Commit extracted source and lockfile to staging
+        if: success() && github.event_name == 'push'
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Staging source is already synchronized."
+          else
+            git commit -m "build: extract verified RAVIO storefront and commerce bridge"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
