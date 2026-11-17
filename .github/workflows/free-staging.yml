@@ -50,7 +50,7 @@ jobs:
           rm -rf src
           cp -a "$TMP_DIR/web/." .
           rm -rf components hooks integrations lib drizzle supabase
-          rm -f vite.config.ts vitest.config.ts router.tsx routeTree.gen.ts server.ts start.ts
+          rm -f vite.config.ts vitest.config.ts router.tsx routeTree.gen.ts server.ts start.ts bun.lock
           rm -rf wordpress-plugin/ravio-commerce-bridge
           mkdir -p wordpress-plugin
           cp -a "$TMP_DIR/plugin/ravio-commerce-bridge" wordpress-plugin/
