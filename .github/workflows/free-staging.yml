@@ -73,6 +73,9 @@ jobs:
       - name: Production build
         run: npm run build
 
+      - name: Cloudflare Workers adapter build
+        run: npm run build:cf
+
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
